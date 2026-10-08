@@ -15,3 +15,4 @@
   実行した人のメールアドレス・ユーザー名・ホームのパスが無いことを確かめる。圧縮した後の zip は
   文字列の検索で中が見えないため、展開した形で見る。xlsx のように中が zip のファイルも開いて見る
 - 最初に集めるツールは backlog_issue_sheet
+- 集めるツールに backlog_issue_cloner と file_sync_checker を足した

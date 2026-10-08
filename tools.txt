@@ -1,3 +1,5 @@
 # 集めるツールの名前。1 行に 1 つ。# から後は読まない
 # 名前は、兄弟に並ぶツールのリポジトリのフォルダ名と、zip を置くフォルダ名を兼ねる
 backlog_issue_sheet
+backlog_issue_cloner
+file_sync_checker
