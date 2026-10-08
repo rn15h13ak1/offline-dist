@@ -1,0 +1,41 @@
+# OS / エディタ
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# 作業の道具が手元に置くもの（設定のフォルダと、作業の取り決め）。
+# このリポジトリは公開するため、道具の名前を書かずに済むよう 1 文字を [] で書く
+.[c]laude/
+[Cc]LAUDE.md
+
+# mac-watcher トリガー・ログ
+.build-trigger
+.build-output.log
+.git-trigger
+.git-output.log
+.github-trigger
+
+# 資格情報
+.env
+.env.*
+secrets.yaml
+credentials*
+*.pem
+*.key
+*.local.yaml
+config.yaml
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.ppk
+known_hosts
+
+# Python
+__pycache__/
+*.py[cod]
+
+# collect.py が書きかけの zip に付ける名前（書き終えたら名前を変える）
+*.zip.tmp
