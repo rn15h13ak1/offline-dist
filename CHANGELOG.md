@@ -5,6 +5,13 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-10
+
+### 追加
+
+- 配るツールに backlog_change_log・backlog_report・excel_to_backlog を足した。
+  ツールをまとめたリポジトリのサブフォルダから集める
+
 ## [0.1.0] - 2026-10-10
 
 ### 追加

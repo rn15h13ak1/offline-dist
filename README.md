@@ -19,6 +19,9 @@
 |---|---|
 | backlog_issue_sheet | `backlog_issue_sheet/backlog_issue_sheet-offline.zip` |
 | backlog_issue_cloner | `backlog_issue_cloner/backlog_issue_cloner-offline.zip` |
+| backlog_change_log | `backlog_change_log/backlog_change_log-offline.zip` |
+| backlog_report | `backlog_report/backlog_report-offline.zip` |
+| excel_to_backlog | `excel_to_backlog/excel_to_backlog-offline.zip` |
 | file_sync_checker | `file_sync_checker/file_sync_checker-offline.zip` |
 
 一覧の元は [`tools.txt`](tools.txt) です。

@@ -4,4 +4,7 @@
 # 省けば、名前と同じ兄弟のフォルダ。リポジトリの中のサブフォルダでもよい（push 済みかは、そのリポジトリ全体で見る）
 backlog_issue_sheet    backlog-tools/tools/backlog_issue_sheet
 backlog_issue_cloner   backlog-tools/tools/backlog_issue_cloner
+backlog_change_log     backlog-tools/tools/backlog_change_log
+backlog_report         backlog-tools/tools/backlog_report
+excel_to_backlog       backlog-tools/tools/excel_to_backlog
 file_sync_checker
