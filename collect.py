@@ -2,17 +2,19 @@
 """
 配る zip を集める
 ================
-兄弟に並ぶ各ツールのリポジトリで書き出しの道具を動かし、できた zip をこのリポジトリに置いてコミットする。
+各ツールの書き出しの道具を動かし、できた zip をこのリポジトリに置いてコミットする。
 
   python3 collect.py                    tools.txt のすべて
   python3 collect.py <ツール名> ...      名前を付けたものだけ（tools.txt にあるもの）
   python3 collect.py --check            集めずに、このリポジトリ全体の漏れだけを検査する
 
-ツールのリポジトリは、既定ではこのリポジトリの親フォルダに並ぶ。環境変数 OFFLINE_DIST_TOOLS で変えられる。
+集める場所は tools.txt の 2 列目に、兄弟のフォルダ（このリポジトリの親フォルダ）から見た相対パスで書く。
+省けば <兄弟>/<ツール名>。リポジトリの中のサブフォルダでもよい。兄弟のフォルダは環境変数 OFFLINE_DIST_TOOLS で変えられる。
 
 ツールごとに次を行い、どれかで落ちたらそのツールは書き換えない（他のツールは続ける）。
-  1. 元のリポジトリが push 済みの main であることを確かめる（作業ツリーがきれい・main・origin/main と同じ）
-  2. 元のリポジトリの scripts/export_offline.py を、出力先を一時フォルダにして動かす
+  1. 元のリポジトリが push 済みの main であることを確かめる（作業ツリーがきれい・main・origin/main と同じ）。
+     集める場所がサブフォルダなら、それを含むリポジトリ全体を見る
+  2. 集める場所の scripts/export_offline.py を、出力先を一時フォルダにして動かす
   3. zip の中身を、展開した形で検査する（決まった語・git の user.email・$USER・$HOME）
   4. 中身が今の zip と同じなら何もしない。違えば置き換えてコミットする
 最後に、このリポジトリ全体（zip は展開した中身）に同じ検査を掛ける。
@@ -67,13 +69,30 @@ def tools_home():
 
 
 def read_tools(repo=REPO):
-    names = []
+    """[(ツール名, 集める場所)]。集める場所は兄弟のフォルダから見た相対パスで、省けばツール名"""
+    tools = []
     with open(os.path.join(repo, TOOLS_LIST), encoding="utf-8") as f:
-        for raw in f:
-            line = raw.split("#", 1)[0].strip()
-            if line:
-                names.append(line)
-    return names
+        for no, raw in enumerate(f, 1):
+            cols = raw.split("#", 1)[0].split()
+            if not cols:
+                continue
+            if len(cols) > 2:
+                raise CollectError("{}:{}: 列が多すぎます。".format(TOOLS_LIST, no))
+            name = cols[0]
+            where = cols[1] if len(cols) == 2 else name
+            if not NAME.match(name) or name in (".", ".."):
+                raise CollectError("{}:{}: ツール名に使えない文字があります: {}".format(TOOLS_LIST, no, name))
+            if not is_relative(where):
+                raise CollectError("{}:{}: 集める場所は、/ で区切った相対パスで書いてください"
+                                   "（絶対パス・..・\\ は使えません）: {}".format(TOOLS_LIST, no, where))
+            tools.append((name, where))
+    return tools
+
+
+def is_relative(where):
+    """/ で区切った相対パスか。絶対パス・ドライブ名・..・\\ を拒む（公開するリポジトリに絶対パスを入れないため）"""
+    parts = where.split("/")
+    return all(NAME.match(p) and p not in (".", "..") for p in parts)
 
 
 # ---------------- 1. 元のリポジトリ ----------------
@@ -265,9 +284,10 @@ def replace_and_commit(repo, name, data, message):
 
 # ---------------- まとめ ----------------
 
-def collect_one(name, repo=REPO, home=None, words=None):
-    """1 つのツールを集める。'更新' か '変わりなし' を返す。落ちれば CollectError"""
-    src = os.path.join(home or tools_home(), name)
+def collect_one(name, repo=REPO, home=None, words=None, where=None):
+    """1 つのツールを集める。where は兄弟のフォルダから見た集める場所（省けばツール名）。
+    '更新' か '変わりなし' を返す。落ちれば CollectError"""
+    src = os.path.join(home or tools_home(), *(where or name).split("/"))
     head = check_source(src)
     with tempfile.TemporaryDirectory() as tmp:
         data = export(src, name, tmp)
@@ -298,14 +318,18 @@ def print_error(e):
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     if argv == ["--check"]:
-        names = []
+        names, listed = [], {}
     elif any(a.startswith("-") for a in argv):
         print("使い方: python3 collect.py [<ツール名> ...] | --check")
         return 2
     else:
-        listed = read_tools()
-        names = argv or listed
-        unknown = [n for n in names if n not in listed or not NAME.match(n)]
+        try:
+            listed = dict(read_tools())
+        except CollectError as e:
+            print(e.title)
+            return 2
+        names = argv or list(listed)
+        unknown = [n for n in names if n not in listed]
         if unknown:
             print("{} に無い名前です: {}".format(TOOLS_LIST, " ".join(unknown)))
             return 2
@@ -313,7 +337,7 @@ def main(argv=None):
     for name in names:
         print(name)
         try:
-            print("  " + collect_one(name))
+            print("  " + collect_one(name, where=listed[name]))
         except (CollectError, OSError) as e:
             failed = True
             print_error(e if isinstance(e, CollectError) else CollectError(str(e)))

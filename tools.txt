@@ -1,5 +1,7 @@
-# 集めるツールの名前。1 行に 1 つ。# から後は読まない
-# 名前は、兄弟に並ぶツールのリポジトリのフォルダ名と、zip を置くフォルダ名を兼ねる
-backlog_issue_sheet
-backlog_issue_cloner
+# 集めるツール。1 行に 1 つ。# から後は読まない
+# 1 列目はツールの名前。zip を置くフォルダ名を兼ねる
+# 2 列目は集める場所。兄弟のフォルダ（このリポジトリの親フォルダ）から見た、/ で区切った相対パスで書く
+# 省けば、名前と同じ兄弟のフォルダ。リポジトリの中のサブフォルダでもよい（push 済みかは、そのリポジトリ全体で見る）
+backlog_issue_sheet    backlog-tools/tools/backlog_issue_sheet
+backlog_issue_cloner   backlog-tools/tools/backlog_issue_cloner
 file_sync_checker

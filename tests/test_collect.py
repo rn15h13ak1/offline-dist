@@ -323,10 +323,115 @@ class MainTest(Base):
         code, out = self.run_collect("other")
         self.assertEqual(code, 2, out)
 
+    def test_bad_place_exits_2(self):
+        write(os.path.join(self.dist, "tools.txt"), "fake ../fake\n")
+        code, out = self.run_collect()
+        self.assertEqual(code, 2, out)
+        self.assertIn("相対パス", out)
+
     def test_check_only(self):
         code, out = self.run_collect("--check")
         self.assertEqual(code, 0, out)
         self.assertFalse(os.path.exists(self.zip_path()))
+
+
+class SubfolderTest(Base):
+    """いくつかのツールをまとめたリポジトリの、サブフォルダから集める"""
+
+    def setUp(self):
+        Base.setUp(self)
+        self.mono = os.path.join(self.home, "suite")
+        remote = os.path.join(self.tmp, "suite.git")
+        os.makedirs(self.mono)
+        git(self.tmp, "init", "-q", "--bare", remote)
+        git(self.mono, "init", "-q")
+        for name in ("one", "two"):
+            write(os.path.join(self.mono, "tools", name, "scripts", "export_offline.py"), FAKE_EXPORT)
+            write(os.path.join(self.mono, "tools", name, "content", "README.md"), "# {}\n".format(name))
+        git(self.mono, "add", "-A")
+        git(self.mono, "commit", "-q", "-m", "first")
+        git(self.mono, "remote", "add", "origin", remote)
+        git(self.mono, "push", "-q", "-u", "origin", "main")
+
+    def collect_sub(self, name="one"):
+        return collect.collect_one(name, repo=self.dist, home=self.home, words=WORDS,
+                                   where="suite/tools/" + name)
+
+    def test_collect_from_subfolder(self):
+        self.assertEqual(self.collect_sub(), "更新")
+        entries = collect.read_entries(read(self.zip_path("one")))
+        self.assertEqual(collect.source_field(entries, "tool"), "one")
+        self.assertIn("one/README.md", entries)
+        msg = git(self.dist, "log", "-1", "--format=%B")
+        self.assertIn("元のコミット: " + git(self.mono, "rev-parse", "HEAD").strip(), msg)
+        self.assertEqual(self.collect_sub(), "変わりなし")
+        self.assertEqual(git(self.mono, "status", "--porcelain", "--ignored"), "")
+
+    def test_dirty_outside_subfolder_is_refused(self):
+        # 集めるサブフォルダの外（同じリポジトリの別のツール）が汚れていても集めない
+        write(os.path.join(self.mono, "tools", "two", "content", "README.md"), "# 汚した\n")
+        before = self.commits()
+        with self.assertRaises(collect.CollectError) as cm:
+            self.collect_sub("one")
+        self.assertIn("汚れています", cm.exception.title)
+        self.assertIn(" M tools/two/content/README.md", cm.exception.lines)
+        self.assertEqual(self.commits(), before)
+        self.assertFalse(os.path.exists(self.zip_path("one")))
+
+    def test_not_pushed_is_refused(self):
+        write(os.path.join(self.mono, "tools", "two", "content", "README.md"), "# まだ push していない\n")
+        git(self.mono, "commit", "-q", "-am", "change")
+        with self.assertRaises(collect.CollectError) as cm:
+            self.collect_sub("one")
+        self.assertIn("origin/main と一致しません", cm.exception.title)
+
+    def test_command_reads_second_column(self):
+        shutil.copy(os.path.join(ROOT, "collect.py"), self.dist)
+        write(os.path.join(self.dist, "tools.txt"), "fake\none  suite/tools/one\n")
+        write(os.path.join(self.dist, ".gitignore"), "__pycache__/\n")
+        git(self.dist, "add", "-A")
+        git(self.dist, "commit", "-q", "-m", "tools")
+        r = subprocess.run([sys.executable, "-B", os.path.join(self.dist, "collect.py"), "one"], cwd=self.dist,
+                           env=dict(os.environ, OFFLINE_DIST_TOOLS=self.home),
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        out = r.stdout.decode("utf-8")
+        self.assertEqual(r.returncode, 0, out)
+        self.assertTrue(os.path.isfile(self.zip_path("one")), out)
+        self.assertFalse(os.path.exists(self.zip_path("fake")), out)
+
+    def test_without_second_column_collects_from_sibling(self):
+        self.assertEqual(collect.collect_one("fake", repo=self.dist, home=self.home, words=WORDS, where=None),
+                         "更新")
+
+
+class ToolsListTest(unittest.TestCase):
+
+    def read(self, text):
+        with tempfile.TemporaryDirectory() as tmp:
+            write(os.path.join(tmp, collect.TOOLS_LIST), text)
+            return collect.read_tools(tmp)
+
+    def test_columns(self):
+        tools = self.read("# 一覧\nalpha\nbeta   suite/tools/beta  # まとめた方\n\n  gamma\tother/gamma\n")
+        self.assertEqual(tools, [("alpha", "alpha"), ("beta", "suite/tools/beta"), ("gamma", "other/gamma")])
+
+    def test_refuses_unsafe_places(self):
+        for where in ("/abs/tools/x", "../x", "suite/../x", "suite/./x", "suite\\x", "C:/x", "c:x",
+                      "suite//x", "suite/x/", "~/x"):
+            with self.subTest(where=where):
+                with self.assertRaises(collect.CollectError) as cm:
+                    self.read("x " + where + "\n")
+                self.assertIn("相対パス", cm.exception.title)
+
+    def test_refuses_extra_columns_and_bad_names(self):
+        for line in ("x a b", "../x", "a\\b", ".."):
+            with self.subTest(line=line):
+                with self.assertRaises(collect.CollectError):
+                    self.read(line + "\n")
+
+    def test_this_repo_list_is_valid(self):
+        names = [n for n, _ in collect.read_tools(ROOT)]
+        self.assertEqual(len(names), len(set(names)))
 
 
 class ThisRepoTest(unittest.TestCase):
