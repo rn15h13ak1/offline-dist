@@ -8,3 +8,5 @@ backlog_change_log     backlog-tools/tools/backlog_change_log
 backlog_report         backlog-tools/tools/backlog_report
 excel_to_backlog       backlog-tools/tools/excel_to_backlog
 file_sync_checker
+docmold
+tool_launcher
