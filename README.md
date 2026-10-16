@@ -7,9 +7,10 @@
 
 1. [置いているツール](#置いているツール)
 2. [持ち込む手順](#持ち込む手順)
-3. [zip を集める（配る人向け）](#zip-を集める配る人向け)
-4. [ファイル構成](#ファイル構成)
-5. [ライセンス](#ライセンス)
+3. [まとめて取り込む](#まとめて取り込む)
+4. [zip を集める（配る人向け）](#zip-を集める配る人向け)
+5. [ファイル構成](#ファイル構成)
+6. [ライセンス](#ライセンス)
 
 ---
 
@@ -46,6 +47,41 @@
 **zip の名前は変わりません。** 新しい版を集めると、同じ名前の zip を置き換えます。
 版は、zip の中の `SOURCE.txt` の `content=`（中身のハッシュ）で分かります。
 更新したツールの zip だけを持ち込めば足ります。
+
+---
+
+## まとめて取り込む
+
+いくつものツールを持ち込んだときは、`import_all.bat` で各ツールの `import.bat` を順に動かせます。
+
+1. `import_all.bat` と `import_all.example.txt` を、持ち込む zip と一緒に落として、持ち込む先の 1 つのフォルダに置きます。
+   zip は展開しません
+2. `import_all.bat` をダブルクリックします。初回は `import_all.example.txt` を写した `import_all.txt` を作り、
+   メモ帳で開いて止まります
+3. `import_all.txt` を書き換えて保存し、もう一度 `import_all.bat` をダブルクリックします
+
+`import_all.txt` が、持ち込み先で書き換える定義です。行頭が `#` の行は読みません（行の途中の `#` は注釈になりません）。
+
+```
+# Git のリポジトリの置き場（各ツールの import.bat に渡す）
+ROOT=\\fileserver\share\git
+# zip を置いたフォルダ。省けば import_all.bat と同じフォルダ
+ZIPDIR=D:\持ち込み
+# ROOT に取り込む
+path_lister
+# このツールだけ別の置き場に取り込む
+docmold=\\other\share\git
+# 行頭に # を付けたツールは取り込まない
+# tool_launcher
+```
+
+- ツールは書いた順に取り込みます。zip が見つからないツールは飛ばすので、更新したツールの zip だけを持ち込めば足ります
+- zip は `<ツール名>-offline.zip` と `<ツール名>\<ツール名>-offline.zip` の順に探します
+- zip は一時フォルダに展開し、終われば消します
+- 置き場を作ってよいか（`Y`）や、競合したときの `KEEP` は、各ツールの `import.bat` がそのまま聞きます
+- 最後に、取り込めたもの・失敗したもの・飛ばしたものを並べます
+- `import_all.txt` は見本から作った後は書き換えません。新しい見本を持ち込んでも、書き換えた定義は残ります。
+  見本にツールが増えたら、`import_all.txt` に行を足します
 
 ---
 
@@ -102,8 +138,11 @@ offline-dist/
 ├── CHANGELOG.md            変更履歴
 ├── tools.txt               集めるツールの一覧
 ├── collect.py              zip を集める
+├── import_all.bat          持ち込み先で、各ツールの import.bat をまとめて動かす
+├── import_all.example.txt  import_all.bat の定義の見本
 ├── tests/
-│   └── test_collect.py     collect.py のテスト
+│   ├── test_collect.py     collect.py のテスト
+│   └── test_import_all.py  import_all.bat と見本のテスト
 └── <ツール名>/
     └── <ツール名>-offline.zip
 ```

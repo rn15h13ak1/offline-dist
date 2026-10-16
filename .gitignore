@@ -39,3 +39,6 @@ __pycache__/
 
 # collect.py が書きかけの zip に付ける名前（書き終えたら名前を変える）
 *.zip.tmp
+
+# import_all.bat が見本から作る、持ち込み先で書き換える定義
+import_all.txt

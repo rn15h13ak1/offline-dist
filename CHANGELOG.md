@@ -9,6 +9,9 @@
 
 - 配るツールに docmold・tool_launcher を足した
 - 配るツールに path_lister を足した
+- `import_all.bat`: 持ち込み先で、持ち込んだツールの `import.bat` を順にまとめて動かす。
+  Git のリポジトリの置き場と取り込むツールは、持ち込み先で書き換える定義 `import_all.txt` に書く
+  （初回に見本 `import_all.example.txt` から作る）。ツールごとに置き場を変えられ、zip が無いツールは飛ばす
 
 ## [0.2.0] - 2026-10-10
 

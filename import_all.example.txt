@@ -1,0 +1,28 @@
+# import_all.bat の定義の見本
+#
+# import_all.bat を初めて動かすと、このファイルを写して import_all.txt を作ります。
+# 書き換えるのは import_all.txt の方です（新しい見本を持ち込んでも、書き換えた定義は残ります）。
+#
+# 行頭が # の行は読みません。= の前後の空白は無視します。
+#
+# ROOT=<フォルダ>    Git のリポジトリの置き場。各ツールの import.bat に渡します
+# ZIPDIR=<フォルダ>  持ち込んだ zip を置いたフォルダ。省けば import_all.bat と同じフォルダです。
+#                    <ツール名>-offline.zip か <ツール名>\<ツール名>-offline.zip を探します
+#
+# その下に、取り込むツールを 1 行に 1 つ書きます。上から順に取り込みます。
+#   <ツール名>             ROOT に取り込む
+#   <ツール名>=<フォルダ>  このツールだけ、別の置き場に取り込む
+# 取り込まないツールは、行頭に # を付けます。zip が見つからないツールは飛ばします。
+
+ROOT=\\fileserver\share\git
+# ZIPDIR=D:\持ち込み
+
+backlog_issue_sheet
+backlog_issue_cloner
+backlog_change_log
+backlog_report
+excel_to_backlog
+file_sync_checker
+docmold
+tool_launcher
+path_lister

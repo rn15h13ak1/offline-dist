@@ -1,0 +1,4 @@
+# 持ち込み先で動かす bat と定義の見本は、CRLF のまま追跡する。
+# 生のファイルを落としてそのまま動かすため、行末を変換させない
+*.bat -text
+import_all.example.txt -text
