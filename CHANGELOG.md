@@ -8,6 +8,7 @@
 ### 追加
 
 - 配るツールに docmold・tool_launcher を足した
+- 配るツールに path_lister を足した
 
 ## [0.2.0] - 2026-10-10
 

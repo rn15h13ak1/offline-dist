@@ -10,3 +10,4 @@ excel_to_backlog       backlog-tools/tools/excel_to_backlog
 file_sync_checker
 docmold
 tool_launcher
+path_lister

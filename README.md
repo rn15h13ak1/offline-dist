@@ -25,6 +25,7 @@
 | docmold | `docmold/docmold-offline.zip` |
 | tool_launcher | `tool_launcher/tool_launcher-offline.zip` |
 | file_sync_checker | `file_sync_checker/file_sync_checker-offline.zip` |
+| path_lister | `path_lister/path_lister-offline.zip` |
 
 一覧の元は [`tools.txt`](tools.txt) です。
 
