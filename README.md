@@ -8,9 +8,10 @@
 1. [置いているツール](#置いているツール)
 2. [持ち込む手順](#持ち込む手順)
 3. [まとめて取り込む](#まとめて取り込む)
-4. [zip を集める（配る人向け）](#zip-を集める配る人向け)
-5. [ファイル構成](#ファイル構成)
-6. [ライセンス](#ライセンス)
+4. [まとめて更新する](#まとめて更新する)
+5. [zip を集める（配る人向け）](#zip-を集める配る人向け)
+6. [ファイル構成](#ファイル構成)
+7. [ライセンス](#ライセンス)
 
 ---
 
@@ -85,6 +86,30 @@ docmold=\\other\share\git
 
 ---
 
+## まとめて更新する
+
+いくつものツールを clone して使っているときは、`update_all.bat` で各ツールの `update.bat` を順に動かせます。
+
+1. `update_all.bat` を落として、ツールを clone したフォルダの隣（同じ親フォルダ）に置きます
+2. `update_all.bat` をダブルクリックします
+
+```
+C:\tools\
+├── update_all.bat
+├── docmold\        git clone したもの
+└── path_lister\    git clone したもの
+```
+
+- 隣のフォルダのうち、`.git`・`update.bat`・`undo_changes.bat` があるものを、名前の順に更新します
+- 更新に失敗したツールがあれば並べて、`Y` を入力するか聞きます。`Y` なら、そのツールごとに `undo_changes.bat` を動かし
+  （変えたファイルを、そのツールのフォルダの `backup\<日時>\` に退避してから元に戻す）、もう一度 `update.bat` を動かします。
+  Git が扱わないファイル（設定・`.venv\` など）には触れません
+- 最後に、更新できたもの・失敗したものを並べます
+- 引数にツールの名前を書くと、そのツールだけを更新します（例 `update_all.bat docmold path_lister`）
+- 名前に空白を含むフォルダは飛ばします
+
+---
+
 ## zip を集める（配る人向け）
 
 各ツールのリポジトリを、このリポジトリと同じフォルダに並べて置きます（Python 3.10 以上が要ります）。
@@ -140,9 +165,10 @@ offline-dist/
 ├── collect.py              zip を集める
 ├── import_all.bat          持ち込み先で、各ツールの import.bat をまとめて動かす
 ├── import_all.example.txt  import_all.bat の定義の見本
+├── update_all.bat          clone したツールの update.bat をまとめて動かす
 ├── tests/
 │   ├── test_collect.py     collect.py のテスト
-│   └── test_import_all.py  import_all.bat と見本のテスト
+│   └── test_import_all.py  import_all.bat・update_all.bat と見本のテスト
 └── <ツール名>/
     └── <ツール名>-offline.zip
 ```

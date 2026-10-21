@@ -1,5 +1,5 @@
 """
-import_all.bat と定義の見本のテスト。bat は Windows でしか動かないため、ここでは
+import_all.bat・update_all.bat と定義の見本のテスト。bat は Windows でしか動かないため、ここでは
 Windows で壊れる形（行末・文字・飛び先の無いラベル）と、見本がツールの一覧と揃っていることを確かめる。
 """
 
@@ -14,7 +14,7 @@ sys.path.insert(0, ROOT)
 
 import collect  # noqa: E402
 
-BAT = os.path.join(ROOT, "import_all.bat")
+BATS = [os.path.join(ROOT, name) for name in ("import_all.bat", "update_all.bat")]
 EXAMPLE = os.path.join(ROOT, "import_all.example.txt")
 
 
@@ -31,19 +31,33 @@ def crlf_only(data):
 class BatShapeTest(unittest.TestCase):
     def test_ascii(self):
         # どのコードページのコンソールでも読めるように
-        read(BAT).decode("ascii")
+        for bat in BATS:
+            with self.subTest(bat=os.path.basename(bat)):
+                read(bat).decode("ascii")
 
     def test_crlf(self):
         # LF だけの行末では、cmd がラベルを見失うことがある
-        self.assertTrue(crlf_only(read(BAT)))
+        for bat in BATS:
+            with self.subTest(bat=os.path.basename(bat)):
+                self.assertTrue(crlf_only(read(bat)))
 
     def test_labels_exist(self):
-        text = read(BAT).decode("ascii")
-        labels = {m.lower() for m in re.findall(r"^:(\w+)", text, re.M)}
-        targets = re.findall(r"\b(?:goto|call)\s+:(\w+)", text, re.I)
-        self.assertTrue(targets)
-        for t in targets:
-            self.assertIn(t.lower(), labels, t)
+        for bat in BATS:
+            with self.subTest(bat=os.path.basename(bat)):
+                text = read(bat).decode("ascii")
+                labels = {m.lower() for m in re.findall(r"^:(\w+)", text, re.M)}
+                targets = re.findall(r"\b(?:goto|call)\s+:(\w+)", text, re.I)
+                self.assertTrue(targets)
+                for t in targets:
+                    self.assertIn(t.lower(), labels, t)
+
+
+class UpdateAllTest(unittest.TestCase):
+    def test_runs_unattended(self):
+        # update.bat は引数があると pause しない。undo_changes.bat は --yes で聞かずに退避して戻す
+        text = read(BATS[1]).decode("ascii")
+        self.assertIn('\\update.bat" unattended', text)
+        self.assertIn('\\undo_changes.bat" --yes', text)
 
 
 class ExampleTest(unittest.TestCase):
@@ -69,7 +83,7 @@ class ExampleTest(unittest.TestCase):
 class AttributesTest(unittest.TestCase):
     def test_not_converted(self):
         # 生のファイルを落としても CRLF のままであるように、Git に行末を変えさせない
-        for rel in ("import_all.bat", "import_all.example.txt"):
+        for rel in ("import_all.bat", "update_all.bat", "import_all.example.txt"):
             out = subprocess.run(["git", "check-attr", "text", "--", rel], cwd=ROOT, check=True,
                                  stdout=subprocess.PIPE).stdout.decode()
             self.assertTrue(out.strip().endswith("unset"), out)
